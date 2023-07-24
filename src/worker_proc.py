@@ -71,8 +71,4 @@ class WorkerProc(mp.Process):
         #         debug_print(e)
         # max_alloc_mem_byte = torch.cuda.max_memory_allocated(self.device_id)
         # max_rsrv_mem_byte = torch.cuda.max_memory_reserved(self.device_id)
-        # if self.csv_writer is not None:
-        #     self.csv_writer.writerow([
-        #         start_t, end_t, (end_t - start_t) / 1000000, max_alloc_mem_byte,
-        #         max_rsrv_mem_byte])
         return res

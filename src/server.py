@@ -8,6 +8,24 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from worker_proc import WorkerProc
 
 
+class LoggingThd(threading.Thread):
+    def __init__(self, log_fname, queue):
+        super(LoggingThd, self).__init__()
+        self.queue = queue
+        self.csv_fh = open(log_fname, 'w', 1)
+        self.csv_writer = csv.writer(self.csv_fh, lineterminator='\n')
+        self.csv_writer.writerow(
+            ['start_timestamp_ns', 'end_timestamp_ns', 'jct_ms',
+             'max_allocated_gpu_memory_allocated_byte',
+             'max_reserved_gpu_memory_byte'])
+
+    def run(self):
+        while True:
+            (start_t, end_t) = self.queue.get()
+            self.csv_writer.writerow([
+                start_t, end_t, (end_t - start_t) / 1000000])
+            # , max_alloc_mem_byte, max_rsrv_mem_byte])
+
 class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, queue: mp.Queue, *args, **kwargs):
         self.queue = queue
@@ -19,27 +37,26 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.queue.put(post_data)
 
 def main():
-    ip = 'localhost'
-    port = 12345
-    req_queue = mp.Queue()
-    res_queue = mp.Queue()
-    server_address = (ip, port)
-    handler = partial(RequestHandler, req_queue)
-    httpd = HTTPServer(server_address, handler)
     model_name = "fasterrcnn_resnet50_fpn"
     model_weight = "FasterRCNN_ResNet50_FPN_Weights"
     device_id = 1
     output_path = "."
     output_file_name = 'model_A'
+
+    ip = 'localhost'
+    port = 12345
+    server_address = (ip, port)
+    req_queue = mp.Queue()
+    res_queue = mp.Queue()
+    handler = partial(RequestHandler, req_queue)
+    httpd = HTTPServer(server_address, handler)
+
     # set up log
     os.makedirs(output_path, exist_ok=True)
     csv_fname = os.path.join(output_path, output_file_name + ".csv")
-    csv_fh = open(csv_fname, 'w', 1)
-    csv_writer = csv.writer(csv_fh, lineterminator='\n')
-    csv_writer.writerow(
-        ['start_timestamp_ns', 'end_timestamp_ns', 'jct_ms',
-         'max_allocated_gpu_memory_allocated_byte',
-         'max_reserved_gpu_memory_byte'])
+    logging_thd = LoggingThd(csv_fname, res_queue)
+    logging_thd.daemon = True
+    logging_thd.start()
 
     worker_proc = WorkerProc(req_queue, res_queue, model_name, model_weight, device_id)
     worker_proc.daemon = True
