@@ -1,0 +1,6 @@
+.DS_Store
+__pycache__
+.ccls-cache
+.cache
+*.o
+*.so
