@@ -1,81 +1,34 @@
-# import csv
 import json
 import multiprocessing as mp
-# import os
 import sys
-# from time import perf_counter_ns
+from time import perf_counter_ns
 # from ctypes import cdll
 
 # import torch
 
 # from tcp_utils import timestamp
 # from transformer_model import is_transformer
-# from vision_model import is_vision_model, VisionModel
+from vision_model import is_vision_model, VisionModel
 
 
 # def debug_print(msg):
 #     print(msg, file=sys.stderr, flush=True)
 
 class WorkerProc(mp.Process):
-    def __init__(self, queue: mp.Queue):
+    def __init__(self, req_queue: mp.Queue, res_queue: mp.Queue,
+                 model_name: str, model_weight: str, device_id: int):
         super(WorkerProc, self).__init__()
-        self.queue = queue
-        # self.pipe = pipe
+        self.req_queue = req_queue
+        self.res_queue = res_queue
 
         # variables used in DNN inference
-        self.model = None
-        self.lib = None  # so lib used to modify shared memory
-        # self.device_id = None
-        # self.csv_fname = None
-        # self.csv_fh = None
-        # self.csv_writer = None
+        if is_vision_model(model_name, model_weight):
+            self.model = VisionModel(model_name, model_weight, device_id)
+        else:
+            raise NotImplementedError
+
+        # self.lib = None  # so lib used to modify shared memory
         # timestamp('tcp server worker', 'init')
-
-    def run(self):
-        # # set the directory for downloading models
-        # torch.hub.set_dir("../torch_cache/")
-        while True:
-            print("in loop")
-            request = self.queue.get()
-            print(request)
-        #     request = self.pipe.recv()
-        #     if not request:
-        #         break
-            request = json.loads(request.decode('utf-8'))
-            print('worker', request, file=sys.stderr, flush=True)
-
-            # handle job request
-            # initialize DNN model
-        #     if self.device_id is None or self.device_id != request['device_id']:
-        #         self.device_id = request['device_id']
-        #         # set the cuda device to use
-        #         torch.cuda.set_device(self.device_id)
-
-        #     if self.model is None and is_vision_model(
-        #         request["model_name"], request["model_weight"]):
-        #         self.model = VisionModel(request, request["device_id"])
-        #     elif self.model is None and is_transformer("", ""):
-        #         raise NotImplementedError
-        #     else:
-        #         raise NotImplementedError
-
-        #     # set up log
-        #     os.makedirs(request['output_file_path'], exist_ok=True)
-        #     csv_fname = os.path.join(
-        #         request['output_file_path'],
-        #         request['output_file_name'] + ".csv")
-        #     if self.csv_fname is None or self.csv_fname != csv_fname:
-        #         self.csv_fname = csv_fname
-        #         if self.csv_fh is not None:
-        #             self.csv_fh.flush()
-        #             self.csv_fh.close()
-        #         self.csv_fh = open(self.csv_fname, 'w', 1)
-        #         self.csv_writer = csv.writer(self.csv_fh, lineterminator='\n')
-        #         self.csv_writer.writerow(
-        #             ['start_timestamp_ns', 'end_timestamp_ns', 'jct_ms',
-        #              'max_allocated_gpu_memory_allocated_byte',
-        #              'max_reserved_gpu_memory_byte'])
-
         #     # set up so lib
         #     if request['control'] and request['priority'] > 0:
         #         # only load library when needed
@@ -83,17 +36,19 @@ class WorkerProc(mp.Process):
         #     else:
         #         self.lib = None
 
-        #     res = self.infer()
-        #     print(res)
+    def run(self):
+        # # set the directory for downloading models
+        while True:
+            request = self.req_queue.get()
+            print(request)
+            request = json.loads(request.decode('utf-8'))
+            print('worker', request, file=sys.stderr, flush=True)
 
-    # def __del__(self):
-        # if self.csv_fh is not None:
-        #     self.csv_fh.flush()
-        #     self.csv_fh.close()
+            res = self.process_request(request)
+            print(res)
 
-    # def infer(self):
-        # start_t: int = perf_counter_ns()
-        # res = None # res :torch.Tensor
+    def process_request(self, request):
+        start_t: int = perf_counter_ns()
         # if self.lib is not None:
         #     try:
         #         suffix = os.getenv("SUFFIX", None)
@@ -102,10 +57,11 @@ class WorkerProc(mp.Process):
         #         self.lib.waitForEmptyGPU()
         #     except Exception as e:
         #         debug_print(e)
-        # assert self.model is not None
-        # res = self.model()
-        # torch.cuda.synchronize()
-        # end_t: int = perf_counter_ns()
+        assert self.model is not None
+        res = self.model.infer(request)
+        print(res)
+        end_t: int = perf_counter_ns()
+        self.res_queue.put((start_t, end_t))
         # if self.lib is not None:
         #     try:
         #         suffix = os.getenv("SUFFIX", None)
@@ -119,4 +75,4 @@ class WorkerProc(mp.Process):
         #     self.csv_writer.writerow([
         #         start_t, end_t, (end_t - start_t) / 1000000, max_alloc_mem_byte,
         #         max_rsrv_mem_byte])
-        # return res
+        return res
