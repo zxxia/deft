@@ -1,3 +1,4 @@
+import argparse
 import csv
 import multiprocessing as mp
 import os
@@ -36,15 +37,38 @@ class RequestHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         self.queue.put(post_data)
 
-def main():
-    model_name = "fasterrcnn_resnet50_fpn"
-    model_weight = "FasterRCNN_ResNet50_FPN_Weights"
-    device_id = 1
-    output_path = "."
-    output_file_name = 'model_A'
 
-    ip = 'localhost'
-    port = 12345
+def parse_args():
+    parser = argparse.ArgumentParser(description="A DNN inference container.")
+    parser.add_argument('--model-name', metavar="MODEL_NAME", type=str,
+                        default="fasterrcnn_resnet50_fpn",
+                        help="DNN model name to run")
+    parser.add_argument('--model-weight', metavar="MODEL_WEIGHT", 
+                        default='FasterRCNN_ResNet50_FPN_Weights',
+                        type=str, help="Model weight to load.")
+    parser.add_argument('--device-id', metavar="DEVICE", type=int, 
+                        required=False, default=0, help="Device id")
+    parser.add_argument('--output-path', metavar='PATH', type=str, default='.',
+                        help="Path to save the output.")
+    parser.add_argument('--name', metavar='NAME', type=str, default='model_A',
+                        help="Name of the output.")
+    parser.add_argument('--ip', metavar='IP', type=str, default='localhost',
+                        help="IP address of the container.")
+    parser.add_argument('--port', metavar='IP', type=int, default=12345,
+                        help="Port the container listens to.")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    model_name = args.model_name
+    model_weight = args.model_weight
+    device_id = args.device_id
+    output_path = args.output_path
+    output_file_name = args.name
+
+    ip = args.ip
+    port = args.port
     server_address = (ip, port)
     req_queue = mp.Queue()
     res_queue = mp.Queue()
