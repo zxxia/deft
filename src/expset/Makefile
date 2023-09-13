@@ -1,6 +1,7 @@
 CXX = g++
 CXXFLAGS = -lrt -lpthread
-INCLUDE_DIR = ../minor/boost_1_61_0
+# INCLUDE_DIR = ../minor/boost_1_61_0
+INCLUDE_DIR = /usr/include/boost
 
 all: expset.o expset.so
 
