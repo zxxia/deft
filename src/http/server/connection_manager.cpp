@@ -13,7 +13,8 @@
 namespace http {
 namespace server {
 
-connection_manager::connection_manager()
+connection_manager::connection_manager(volatile int& flag)
+    : flag_(flag)
 {
 }
 
@@ -34,6 +35,10 @@ void connection_manager::stop_all()
   for (auto c: connections_)
     c->stop();
   connections_.clear();
+}
+
+void connection_manager::flip_flag() {
+  flag_ = 1 - flag_;
 }
 
 } // namespace server

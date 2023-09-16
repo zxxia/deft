@@ -50,6 +50,7 @@ void connection::do_read()
           if (result == request_parser::good)
           {
             request_handler_.handle_request(request_, reply_);
+            connection_manager_.flip_flag();
             do_write();
           }
           else if (result == request_parser::bad)
