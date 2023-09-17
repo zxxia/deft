@@ -15,13 +15,15 @@ namespace http {
 namespace server {
 
 request_parser::request_parser()
-  : state_(method_start)
+  : state_(method_start),
+    content_length_(0)
 {
 }
 
 void request_parser::reset()
 {
   state_ = method_start;
+  content_length_ = 0;
 }
 
 request_parser::result_type request_parser::consume(request& req, char input)
@@ -276,7 +278,26 @@ request_parser::result_type request_parser::consume(request& req, char input)
       return bad;
     }
   case expecting_newline_3:
-    return (input == '\n') ? good : bad;
+    if (input == '\n') {
+        for (auto hdr : req.headers) {
+            if (hdr.name == "Content-Length") {
+                content_length_ = std::stoi(hdr.value);
+            }
+        }
+        if (content_length_ > 0) {
+            state_ = expecting_body;
+            return indeterminate;
+        }
+        return good;
+    }
+    return bad;
+  case expecting_body:
+    req.body.push_back(input);
+    if (req.body.size() == content_length_) {
+      content_length_ = 0;
+      return good;
+    }
+    return indeterminate;
   default:
     return bad;
   }
