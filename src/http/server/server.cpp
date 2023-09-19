@@ -20,7 +20,7 @@ server::server(const std::string& address, const std::string& port,
   : io_service_(),
     signals_(io_service_),
     acceptor_(io_service_),
-    connection_manager_(flag),
+    connection_manager_(),
     socket_(io_service_),
     request_handler_(doc_root),
     flag_(flag)
@@ -71,7 +71,7 @@ void server::do_accept()
         if (!ec)
         {
           connection_manager_.start(std::make_shared<connection>(
-              std::move(socket_), connection_manager_, request_handler_));
+              std::move(socket_), connection_manager_, request_handler_, flag_));
         }
 
         do_accept();
