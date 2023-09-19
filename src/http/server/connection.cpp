@@ -18,10 +18,11 @@ namespace http {
 namespace server {
 
 connection::connection(boost::asio::ip::tcp::socket socket,
-    connection_manager& manager, request_handler& handler)
+    connection_manager& manager, request_handler& handler, volatile int& flag)
   : socket_(std::move(socket)),
     connection_manager_(manager),
-    request_handler_(handler)
+    request_handler_(handler),
+    flag_(flag)
 {
 }
 
@@ -49,8 +50,7 @@ void connection::do_read()
 
           if (result == request_parser::good)
           {
-            request_handler_.handle_request(request_, reply_);
-            connection_manager_.flip_flag();
+            request_handler_.handle_request(request_, reply_, flag_);
             do_write();
           }
           else if (result == request_parser::bad)
