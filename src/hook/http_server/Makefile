@@ -1,7 +1,6 @@
 CXX := g++
-SRC := server
-SOURCES := $(wildcard $(SRC)/*.cpp)
-OBJECTS := $(patsubst $(SRC)/%.cpp, $(SRC)/%.o, $(SOURCES))
+SOURCES := $(wildcard *.cpp)
+OBJECTS := $(patsubst %.cpp, %.o, $(SOURCES))
 .PHONY: all clean
 # all:
 # 	g++ -lboost_system server/*.cpp -lpthread -L/usr/lib/x86_64-linux-gnu -o http_server
@@ -18,4 +17,4 @@ http_server: $(OBJECTS)
 # %.o : %.cpp
 # 	$(CXX) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 clean:
-	rm http_server server/*.o
+	rm http_server *.o
