@@ -24,6 +24,7 @@
 #include <cuda_runtime.h>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include "http_server/server.hpp"
 using namespace boost::interprocess;
 
 //Added by Wenqing
@@ -78,6 +79,16 @@ static cudaEvent_t cu_dummy;
 
 
 static int ID = -1;
+static volatile int running = 1;
+
+void launch_server(const std::string& address, const std::string& port)  {
+  std::cout << "server thread" << std::endl;
+  // Initialise the server.
+  http::server::server s(address, port, ".", running);
+
+  // Run the server until stopped.
+  s.run();
+}
 
 /**
  * Get the environment variable set before an instance of tester.py is called. The ID is used
