@@ -43,10 +43,10 @@ def parse_args():
     parser.add_argument('--model-name', metavar="MODEL_NAME", type=str,
                         default="fasterrcnn_resnet50_fpn",
                         help="DNN model name to run")
-    parser.add_argument('--model-weight', metavar="MODEL_WEIGHT", 
+    parser.add_argument('--model-weight', metavar="MODEL_WEIGHT",
                         default='FasterRCNN_ResNet50_FPN_Weights',
                         type=str, help="Model weight to load.")
-    parser.add_argument('--device-id', metavar="DEVICE", type=int, 
+    parser.add_argument('--device-id', metavar="DEVICE", type=int,
                         required=False, default=0, help="Device id")
     parser.add_argument('--output-path', metavar='PATH', type=str, default='.',
                         help="Path to save the output.")

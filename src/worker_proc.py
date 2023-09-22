@@ -20,12 +20,9 @@ class WorkerProc(mp.Process):
         super(WorkerProc, self).__init__()
         self.req_queue = req_queue
         self.res_queue = res_queue
-
-        # variables used in DNN inference
-        if is_vision_model(model_name, model_weight):
-            self.model = VisionModel(model_name, model_weight, device_id)
-        else:
-            raise NotImplementedError
+        self.model_name = model_name
+        self.model_weight = model_weight
+        self.device_id = device_id
 
         # self.lib = None  # so lib used to modify shared memory
         # timestamp('tcp server worker', 'init')
@@ -37,6 +34,11 @@ class WorkerProc(mp.Process):
         #         self.lib = None
 
     def run(self):
+        # variables used in DNN inference
+        if is_vision_model(self.model_name, self.model_weight):
+            self.model = VisionModel(self.model_name, self.model_weight, self.device_id)
+        else:
+            raise NotImplementedError
         # # set the directory for downloading models
         while True:
             request = self.req_queue.get()
