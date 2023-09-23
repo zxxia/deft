@@ -59,6 +59,7 @@ The solution is a workaround. See the code below.
 #include <cuda.h>
 #include <string.h>
 #include <fstream>
+#include <thread>
 
 #define STRINGIFY(x) STRINGIFY_AUX(x)
 #define STRINGIFY_AUX(x) #x
@@ -85,6 +86,7 @@ typedef enum HookSymbolsEnum {
     SYM_CU_SYMBOLS,
 } HookSymbols;
 
+extern void launch_http_server();
 extern CUresult cuInit_hook(unsigned int Flags);
 extern CUresult cuInit_posthook(unsigned int Flags);
 extern CUresult cuMemAlloc_hook(CUdeviceptr* dptr, size_t bytesize);
@@ -149,6 +151,8 @@ static void* post_hooks[SYM_CU_SYMBOLS] = {
 
 static void* real_func[SYM_CU_SYMBOLS];
 static void* real_omp_get_num_threads = NULL;
+
+static std::shared_ptr<std::thread> th = NULL;
 
 void *libcudaHandle = __libc_dlopen_mode("libcuda.so", RTLD_LAZY);
 void *libdlHandle = __libc_dlopen_mode("libdl.so", RTLD_LAZY);
@@ -262,6 +266,9 @@ void* dlsym(void *handle, const char *symbol)
 #define GENERATE_INTERCEPT_FUNCTION(hooksymbol, funcname, params, ...)                     \
     CUresult funcname params                                                               \
     {                                                                                      \
+        if (th == NULL) {                                                                  \
+            th = std::make_shared<std::thread>(launch_http_server);                        \
+        }                                                                                  \
         CUresult res = CUDA_SUCCESS;                                                       \
         if (hooks[hooksymbol]) {                                                           \
             res = ((CUresult (*)params)hooks[hooksymbol])(__VA_ARGS__);                    \
