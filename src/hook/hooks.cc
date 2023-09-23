@@ -60,10 +60,6 @@ static volatile int *gpu_empty;
 
 static volatile int *current_process;
 
-const static std::string address = "0.0.0.0";
-const static std::string port = "8080";
-static std::shared_ptr<std::thread> th = NULL;
-
 
 void init_shared_mem() {
     string shm_name("MySharedMemory_" + suffix);
@@ -86,9 +82,6 @@ void init_shared_mem() {
 /*************************** hooks functions below ***************************/
 CUresult cuInit_hook(uint32_t flags)
 {
-    if (th == NULL) {
-        th = std::make_shared<std::thread>(launch_server, address, port);
-    }
     CUresult cures = CUDA_SUCCESS;
     return cures;
 }

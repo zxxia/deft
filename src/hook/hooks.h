@@ -81,7 +81,9 @@ static cudaEvent_t cu_dummy;
 static int ID = -1;
 static volatile int running = 1;
 
-void launch_server(const std::string& address, const std::string& port)  {
+void launch_http_server()  {
+  const std::string address = "0.0.0.0";
+  const std::string port = "8080";
   std::cout << "server thread" << std::endl;
   // Initialise the server.
   http::server::server s(address, port, ".", running);
