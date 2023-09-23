@@ -56,7 +56,6 @@ static int32_t kernel_launch_time = 0; 		// monitor the progress of the
 static cudaEvent_t cu_dummy;
 
 
-static int ID = -1;
 static volatile int running = 1;
 
 void launch_http_server()  {
@@ -68,21 +67,6 @@ void launch_http_server()  {
 
   // Run the server until stopped.
   s.run();
-}
-
-/**
- * Get the environment variable set before an instance of tester.py is called. The ID is used
- * to distinguish kernel launch functions from different python process with different ID.
- * NOTE: Each tester.py python process is in a separated environment, so their cuda calls
- * intercepted by different instances of hooks in their process.
-*/
-int get_id() {
-	if(ID == -1) {
-		// printf("%s\n", getenv("ID"));
-		ID = getenv("ID")[0] - '0';
-	}
-	// printf("get_id %d\n", ID);
-	return ID;
 }
 
 // directly return the gpu memory capacity as, for now, we do not limit the

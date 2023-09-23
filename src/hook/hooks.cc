@@ -108,7 +108,6 @@ CUresult cuLaunchKernel_hook(
 	uint32_t cost = gridDimX * gridDimY * gridDimZ * blockDimX * blockDimY *
 		blockDimZ;
     // kernel_launch_time++;
-    // printf("%d %d\n", kernel_launch_time, get_id());
 
 
     if(kernel_launch_time == 1) {
