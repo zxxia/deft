@@ -200,15 +200,6 @@ CUresult cuLaunchKernel_posthook(
 {
 	CUresult ret = CUDA_SUCCESS;
 
-#ifdef _SYNC_QUEUE
-    //only add synchronization point to the long job.
-    static int cnt = 0;
-    if (cnt++ % SYNC_KERNELS == 0) {
-        nvtxRangePushA("sync");
-        cuStreamSynchronize(hStream);
-        nvtxRangePop();
-    }
-#endif
 	return ret;
 }
 

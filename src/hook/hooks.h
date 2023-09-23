@@ -47,10 +47,6 @@ using namespace boost::interprocess;
 // options
 #define CGROUP_DIR getenv("CGROUP_DIR")
 
-//Wenqing: Option for Synchronization per kernels
-#ifdef _SYNC_QUEUE
-#define SYNC_KERNELS stoi(getenv("SYNC_KERNELS"))
-#endif
 
 // function macro for checking and debugging
 #define CUDA_CHECK(ret) cuda_assert((ret), false, __FILE__, __LINE__);
