@@ -159,28 +159,6 @@ CUresult cuLaunchKernel_hook(
     // kernel_launch_time++;
     // printf("%d %d\n", kernel_launch_time, get_id());
 
-#ifdef _GROUP_EVENT
-    if (kernel_launch_time == 0) {
-        for (int i = 0; i < EVENT_POOL_SIZE; i++) {
-            cudaEventCreate(&cu_event_cycle[i]);
-        }
-    }
-    static int counter = 0;
-    if (kernel_launch_time % queue_group_size == 0) {
-        if (kernel_launch_time / queue_group_size > 2) {
-            int prev_idx = (cur_event_idx - 2 + EVENT_POOL_SIZE) % EVENT_POOL_SIZE;
-            while((counter++) % 100 != 0 || cudaEventQuery(cu_event_cycle[prev_idx]) != cudaSuccess) {
-                // printf("waitting\n");
-                // wait
-            }
-        }
-    }
-
-    kernel_launch_time++;
-    // printf("%d %d\n", kernel_launch_time, get_id());
-
-#endif
-
 #ifdef _SCHEDULER_LOCK
 
     if(shm_ptr == NULL || region_ptr == NULL) {
@@ -221,13 +199,6 @@ CUresult cuLaunchKernel_posthook(
 		void** kernelParams, void** extra)
 {
 	CUresult ret = CUDA_SUCCESS;
-
-#ifdef _GROUP_EVENT
-    if (kernel_launch_time % queue_group_size == 0) {
-        cudaEventRecord(cu_event_cycle[cur_event_idx % EVENT_POOL_SIZE]);
-        cur_event_idx++;
-    }
-#endif
 
 #ifdef _SYNC_QUEUE
     //only add synchronization point to the long job.

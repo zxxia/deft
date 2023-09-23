@@ -68,12 +68,6 @@ static size_t get_memory_limit();
 static volatile size_t gpu_mem_limit = get_memory_limit();
 static int32_t kernel_launch_time = 0; 		// monitor the progress of the
 											// infernece
-#ifdef _GROUP_EVENT
-const static int EVENT_POOL_SIZE  = 100;
-static cudaEvent_t cu_event_cycle[EVENT_POOL_SIZE];
-static int cur_event_idx = 0;
-static int queue_group_size = std::stoi(getenv("EVENT_GROUP_SIZE"));
-#endif
 
 static cudaEvent_t cu_dummy;
 
