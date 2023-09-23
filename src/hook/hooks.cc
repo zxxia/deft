@@ -34,39 +34,6 @@ limitations under the License.
 #include <nvtx3/nvToolsExt.h>
 
 using namespace std;
-#ifdef _SCHEDULER_LOCK
-
-static string suffix(getenv("SUFFIX")); // TODO: bug when genenv returns NULL
-static string named_mtx_name("named_mutex_" + suffix);
-static string named_cnd_name("named_cnd_" + suffix);
-static string named_mtx_dev_sync_name("named_mutex_dev_sync_" + suffix);
-static string named_cnd_dev_sync_name("named_cnd_dev_sync_" + suffix);
-
-static std::shared_ptr<boost::interprocess::shared_memory_object> shm_ptr;
-static std::shared_ptr<boost::interprocess::mapped_region> region_ptr;
-static boost::interprocess::named_mutex named_mtx(
-    boost::interprocess::open_only, named_mtx_name.c_str());
-static boost::interprocess::named_condition named_cnd(
-    boost::interprocess::open_only, named_cnd_name.c_str());
-
-
-static volatile int *current_process;
-
-
-void init_shared_mem() {
-    string shm_name("MySharedMemory_" + suffix);
-    shm_ptr = make_shared<boost::interprocess::shared_memory_object>(
-        boost::interprocess::open_or_create, shm_name.c_str(),
-        boost::interprocess::read_write);
-    region_ptr = make_shared<boost::interprocess::mapped_region>(
-        *shm_ptr, boost::interprocess::read_write);
-
-    int *mem = static_cast<int*>(region_ptr->get_address());
-
-    current_process = &mem[0];
-}
-
-#endif
 
 /*************************** hooks functions below ***************************/
 CUresult cuInit_hook(uint32_t flags)
@@ -159,28 +126,6 @@ CUresult cuLaunchKernel_hook(
     // kernel_launch_time++;
     // printf("%d %d\n", kernel_launch_time, get_id());
 
-#ifdef _SCHEDULER_LOCK
-
-    if(shm_ptr == NULL || region_ptr == NULL) {
-        init_shared_mem();
-    }
-    if (get_id() == 0) {
-        //job 1 is running, give way.
-        // https://www.boost.org/doc/libs/1_63_0/doc/html/thread/synchronization.html#thread.synchronization.condvar_ref
-        bool pushed = false;
-        boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(named_mtx);
-        while(*current_process == 1) {
-            if (!pushed) {
-                nvtxRangePushA("preemption");
-                pushed = true;
-            }
-            named_cnd.wait(lock);
-        }
-        if (pushed) {
-            nvtxRangePop();
-        }
-    }
-#endif
 
     if(kernel_launch_time == 1) {
         cudaEventCreate(&cu_dummy);
