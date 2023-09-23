@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 /*
-The CUDA intercept technique used in this file is based on the 
+The CUDA intercept technique used in this file is based on the
 following references:
 1) https://osterlund.xyz/posts/2018-03-12-interceptiong-functions-c.html
 2) https://stackoverflow.com/questions/37792037/ld-preload-doesnt-affect-dlopen-with-rtld-now
@@ -27,23 +27,23 @@ have been fixed:
 
 Fix 1:
 dlsym call can be triggered either by ld-linux.so or manually by the
-user program. For a symbol to be looked up successfully by real_dlsym(), 
+user program. For a symbol to be looked up successfully by real_dlsym(),
 it looks that the corresponding shared library has to be already loaded
 somewhere in the memory.
 
-There are two events in question here: 
+There are two events in question here:
 1) when a function symbol (e.g. cuInit) is looked up by a dlsym call
 2) when the function (e.g. cuInit) is called
 
 When the 1st event happens, our cuInit overwrite function is returned.
 However, the cuInit overwrite function may not be immediately called.
-Instead, the actual call (2nd event) can happen much later, when 
-real_dlsym() can no longer find where the real cuInit symbol is. 
-This leads to a NULL value returned by real_dlsym() and thus 
+Instead, the actual call (2nd event) can happen much later, when
+real_dlsym() can no longer find where the real cuInit symbol is.
+This leads to a NULL value returned by real_dlsym() and thus
 the segmentation fault.
 
 The solution is to save the real addresses when the initial lookups
-happen. This is likely to succeed because otherwise a normal run 
+happen. This is likely to succeed because otherwise a normal run
 (without PRELOAD) would also fail.
 
 In this code, real_func[SYM_CU_SYMBOLS] is used to save the real addresses.
@@ -89,26 +89,26 @@ extern CUresult cuInit_hook(unsigned int Flags);
 extern CUresult cuInit_posthook(unsigned int Flags);
 extern CUresult cuMemAlloc_hook(CUdeviceptr* dptr, size_t bytesize);
 extern CUresult cuMemAllocManaged_hook(CUdeviceptr *dptr, size_t bytesize, unsigned int flags);
-extern CUresult cuMemAllocPitch_hook(CUdeviceptr* dptr, size_t* pPitch, size_t WidthInBytes, 
+extern CUresult cuMemAllocPitch_hook(CUdeviceptr* dptr, size_t* pPitch, size_t WidthInBytes,
                                      size_t Height, unsigned int ElementSizeBytes);
 extern CUresult cuArrayCreate_hook(CUarray *pHandle, const CUDA_ARRAY_DESCRIPTOR *pAllocateArray);
 extern CUresult cuArray3DCreate_hook(CUarray* pHandle, const CUDA_ARRAY3D_DESCRIPTOR* pAllocateArray);
-extern CUresult cuMipmappedArrayCreate_hook(CUmipmappedArray *pHandle, 
-                                       const CUDA_ARRAY3D_DESCRIPTOR *pMipmappedArrayDesc, 
+extern CUresult cuMipmappedArrayCreate_hook(CUmipmappedArray *pHandle,
+                                       const CUDA_ARRAY3D_DESCRIPTOR *pMipmappedArrayDesc,
                                        unsigned int numMipmapLevels);
-extern CUresult cuLaunchKernel_hook(CUfunction f, unsigned int gridDimX, unsigned int gridDimY, 
-                                    unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY, 
-                                    unsigned int blockDimZ, unsigned int sharedMemBytes, CUstream hStream, 
+extern CUresult cuLaunchKernel_hook(CUfunction f, unsigned int gridDimX, unsigned int gridDimY,
+                                    unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY,
+                                    unsigned int blockDimZ, unsigned int sharedMemBytes, CUstream hStream,
                                     void** kernelParams, void** extra);
-extern CUresult cuLaunchCooperativeKernel_hook(CUfunction f, unsigned int gridDimX, unsigned int gridDimY, 
+extern CUresult cuLaunchCooperativeKernel_hook(CUfunction f, unsigned int gridDimX, unsigned int gridDimY,
                                                unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY,
                                                unsigned int blockDimZ, unsigned int sharedMemBytes,
                                                CUstream hStream, void **kernelParams);
-extern CUresult cuLaunchKernel_posthook(CUfunction f, unsigned int gridDimX, unsigned int gridDimY, 
-                                    unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY, 
-                                    unsigned int blockDimZ, unsigned int sharedMemBytes, CUstream hStream, 
+extern CUresult cuLaunchKernel_posthook(CUfunction f, unsigned int gridDimX, unsigned int gridDimY,
+                                    unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY,
+                                    unsigned int blockDimZ, unsigned int sharedMemBytes, CUstream hStream,
                                     void** kernelParams, void** extra);
-extern CUresult cuLaunchCooperativeKernel_posthook(CUfunction f, unsigned int gridDimX, unsigned int gridDimY, 
+extern CUresult cuLaunchCooperativeKernel_posthook(CUfunction f, unsigned int gridDimX, unsigned int gridDimY,
                                                unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY,
                                                unsigned int blockDimZ, unsigned int sharedMemBytes,
                                                CUstream hStream, void **kernelParams);
@@ -118,7 +118,7 @@ extern CUresult cuMemGetInfo_posthook(size_t* free, size_t* total);
 
 //wenqing: cuLaunchKernel is indexed as 7 by the enumeration afore-defined.
 static void* hooks[SYM_CU_SYMBOLS] = {
-    (void*) cuInit_hook, 
+    (void*) cuInit_hook,
     (void*) cuMemAlloc_hook,
     (void*) cuMemAllocManaged_hook,
     (void*) cuMemAllocPitch_hook,
@@ -133,7 +133,7 @@ static void* hooks[SYM_CU_SYMBOLS] = {
 };
 //wenqing: cuLaunchKernel is indexed as 7 by the enumeration afore-defined.
 static void* post_hooks[SYM_CU_SYMBOLS] = {
-    (void*) cuInit_posthook, 
+    (void*) cuInit_posthook,
     NULL,
     NULL,
     NULL,
@@ -160,7 +160,7 @@ static void *real_dlsym(void *handle, const char *symbol)
     return (*internal_dlsym)(handle, symbol);
 }
 
-void* dlsym(void *handle, const char *symbol) 
+void* dlsym(void *handle, const char *symbol)
 {
     if (strcmp(symbol, "omp_get_num_threads") == 0) {
         if(real_omp_get_num_threads == NULL)
@@ -173,7 +173,7 @@ void* dlsym(void *handle, const char *symbol)
     if (strncmp(symbol, "cu", 2) != 0) {
         return real_dlsym(handle, symbol);
     }
-    
+
  	if (strcmp(symbol, STRINGIFY(cuInit)) == 0) {
         if(real_func[SYM_CU_INIT] == NULL) {
             real_func[SYM_CU_INIT] = real_dlsym(handle, symbol);
@@ -250,7 +250,7 @@ void* dlsym(void *handle, const char *symbol)
         }
         return (void*)(&cuMemGetInfo);
     }
-    
+
     if (strcmp(symbol, STRINGIFY(cuGetProcAddress)) == 0) {
         return (void *)(&cuGetProcAddress);
     }
@@ -276,35 +276,35 @@ void* dlsym(void *handle, const char *symbol)
         return res;                                                                        \
     }
 
-GENERATE_INTERCEPT_FUNCTION(SYM_CU_INIT, cuInit, (unsigned int Flags), Flags)
+// GENERATE_INTERCEPT_FUNCTION(SYM_CU_INIT, cuInit, (unsigned int Flags), Flags)
 GENERATE_INTERCEPT_FUNCTION(SYM_CU_MEM_ALLOC, cuMemAlloc, (CUdeviceptr* dptr, size_t bytesize), dptr, bytesize)
-GENERATE_INTERCEPT_FUNCTION(SYM_CU_MEM_ALLOC_MANAGED, cuMemAllocManaged, 
+GENERATE_INTERCEPT_FUNCTION(SYM_CU_MEM_ALLOC_MANAGED, cuMemAllocManaged,
                             (CUdeviceptr *dptr, size_t bytesize, unsigned int flags),
                             dptr, bytesize, flags)
-GENERATE_INTERCEPT_FUNCTION(SYM_CU_MEM_ALLOC_PITCH, cuMemAllocPitch, 
-                            (CUdeviceptr* dptr, size_t* pPitch, size_t WidthInBytes, 
-                             size_t Height, unsigned int ElementSizeBytes), 
+GENERATE_INTERCEPT_FUNCTION(SYM_CU_MEM_ALLOC_PITCH, cuMemAllocPitch,
+                            (CUdeviceptr* dptr, size_t* pPitch, size_t WidthInBytes,
+                             size_t Height, unsigned int ElementSizeBytes),
                             dptr, pPitch, WidthInBytes, Height, ElementSizeBytes)
-GENERATE_INTERCEPT_FUNCTION(SYM_CU_ARRAY_CREATE, cuArrayCreate, 
-                            (CUarray *pHandle, const CUDA_ARRAY_DESCRIPTOR *pAllocateArray), 
+GENERATE_INTERCEPT_FUNCTION(SYM_CU_ARRAY_CREATE, cuArrayCreate,
+                            (CUarray *pHandle, const CUDA_ARRAY_DESCRIPTOR *pAllocateArray),
                             pHandle, pAllocateArray)
-GENERATE_INTERCEPT_FUNCTION(SYM_CU_ARRAY_3D_CREATE, cuArray3DCreate, 
-                            (CUarray *pHandle, const CUDA_ARRAY3D_DESCRIPTOR *pAllocateArray), 
+GENERATE_INTERCEPT_FUNCTION(SYM_CU_ARRAY_3D_CREATE, cuArray3DCreate,
+                            (CUarray *pHandle, const CUDA_ARRAY3D_DESCRIPTOR *pAllocateArray),
                             pHandle, pAllocateArray)
-GENERATE_INTERCEPT_FUNCTION(SYM_CU_MIP_ARRAY_CREATE, cuMipmappedArrayCreate, 
-                            (CUmipmappedArray *pHandle, 
-                             const CUDA_ARRAY3D_DESCRIPTOR *pMipmappedArrayDesc, unsigned int numMipmapLevels), 
-                            pHandle, pMipmappedArrayDesc, numMipmapLevels)                            
-GENERATE_INTERCEPT_FUNCTION(SYM_CU_LAUNCH_KERNEL, cuLaunchKernel, 
+GENERATE_INTERCEPT_FUNCTION(SYM_CU_MIP_ARRAY_CREATE, cuMipmappedArrayCreate,
+                            (CUmipmappedArray *pHandle,
+                             const CUDA_ARRAY3D_DESCRIPTOR *pMipmappedArrayDesc, unsigned int numMipmapLevels),
+                            pHandle, pMipmappedArrayDesc, numMipmapLevels)
+GENERATE_INTERCEPT_FUNCTION(SYM_CU_LAUNCH_KERNEL, cuLaunchKernel,
                             (CUfunction f,
-							 unsigned int gridDimX, unsigned int gridDimY, unsigned int gridDimZ, 
-                             unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ, 
+							 unsigned int gridDimX, unsigned int gridDimY, unsigned int gridDimZ,
+                             unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ,
                              unsigned int sharedMemBytes, CUstream hStream,
 							 void** kernelParams, void** extra
-							), 
+							),
                             f,
 							gridDimX, gridDimY, gridDimZ,
-							blockDimX, blockDimY, blockDimZ, 
+							blockDimX, blockDimY, blockDimZ,
                             sharedMemBytes, hStream, kernelParams, extra)
 GENERATE_INTERCEPT_FUNCTION(SYM_CU_LAUNCH_COOP_KERNEL, cuLaunchCooperativeKernel,
                             (CUfunction f,
@@ -315,10 +315,10 @@ GENERATE_INTERCEPT_FUNCTION(SYM_CU_LAUNCH_COOP_KERNEL, cuLaunchCooperativeKernel
 							),
                             f,
 							gridDimX, gridDimY, gridDimZ,
-							blockDimX, blockDimY, blockDimZ, 
+							blockDimX, blockDimY, blockDimZ,
                             sharedMemBytes, hStream,
 							kernelParams)
-GENERATE_INTERCEPT_FUNCTION(SYM_CU_DEVICE_TOTAL_MEM, cuDeviceTotalMem, 
+GENERATE_INTERCEPT_FUNCTION(SYM_CU_DEVICE_TOTAL_MEM, cuDeviceTotalMem,
                             (size_t* bytes, CUdevice dev), bytes, dev)
 GENERATE_INTERCEPT_FUNCTION(SYM_CU_MEM_GET_INFO, cuMemGetInfo, (size_t* free, size_t* total), free, total)
 
@@ -361,7 +361,7 @@ CUresult CUDAAPI cuGetProcAddress(const char *symbol, void **pfn, int cudaVersio
         *pfn = (void *)(&cuMemAllocPitch);
 #pragma push_macro("cuLaunchKernel")
 #undef cuLaunchKernel
-    } else if  (strcmp(symbol, STRINGIFY_AUX(cuLaunchKernel)) == 0) { 
+    } else if  (strcmp(symbol, STRINGIFY_AUX(cuLaunchKernel)) == 0) {
 #pragma pop_macro("cuLaunchKernel")
         if(real_func[SYM_CU_LAUNCH_KERNEL] == NULL) {
             real_func[SYM_CU_LAUNCH_KERNEL] = *pfn;
@@ -421,7 +421,7 @@ CUresult CUDAAPI cuGetProcAddress(const char *symbol, void **pfn, int cudaVersio
     } else if (strcmp(symbol, STRINGIFY(cuInit)) == 0) {
 #pragma pop_macro("cuInit")
         *pfn = (void *)(&cuInit);
-    } 
-    
+    }
+
     return (result);
 }
