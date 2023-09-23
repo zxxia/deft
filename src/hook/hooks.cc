@@ -15,25 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <string>
-#include <cstdint>
-#include <cstdio>
-#include <ctime>
 #include <iomanip>
-#include <pthread.h>
-#include <thread>
 #include "hooks.h"
 #include "nvml.h"
-#include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-#include <boost/interprocess/sync/named_mutex.hpp>
-#include <boost/interprocess/sync/named_condition.hpp>
-#include <boost/interprocess/sync/named_semaphore.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-
-#include <nvtx3/nvToolsExt.h>
-
-using namespace std;
 
 /*************************** hooks functions below ***************************/
 CUresult cuInit_hook(uint32_t flags)

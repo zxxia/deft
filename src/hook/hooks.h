@@ -15,23 +15,11 @@
 #include <sstream>
 #include <set>
 #include <unistd.h>
-#include <pthread.h>
 #include <nvml.h>
 #include <cuda.h>
 #include <sys/time.h>
-#include <time.h>
-#include <math.h>
 #include <cuda_runtime.h>
-#include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/mapped_region.hpp>
 #include "http_server/server.hpp"
-using namespace boost::interprocess;
-
-//Added by Wenqing
-#include <chrono>
-#include <mutex>
-#include <sstream>
-#include <sys/time.h>
 
 // unit definition
 #define KB 			(size_t)1024
