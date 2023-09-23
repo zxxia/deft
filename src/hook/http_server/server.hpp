@@ -30,7 +30,7 @@ public:
   /// Construct the server to listen on the specified TCP address and port, and
   /// serve up files from the given directory.
   explicit server(const std::string& address, const std::string& port,
-      const std::string& doc_root, volatile int& flag);
+      const std::string& doc_root);
 
   /// Run the server's io_service loop.
   void run();
@@ -59,8 +59,6 @@ private:
 
   /// The handler for all incoming requests.
   request_handler request_handler_;
-
-  volatile int& flag_;
 };
 
 } // namespace server

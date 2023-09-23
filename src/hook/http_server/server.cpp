@@ -16,14 +16,13 @@ namespace http {
 namespace server {
 
 server::server(const std::string& address, const std::string& port,
-    const std::string& doc_root, volatile int& flag)
+    const std::string& doc_root)
   : io_service_(),
     signals_(io_service_),
     acceptor_(io_service_),
     connection_manager_(),
     socket_(io_service_),
-    request_handler_(doc_root),
-    flag_(flag)
+    request_handler_(doc_root)
 {
   // Register to handle the signals that indicate when the server should exit.
   // It is safe to register for the same signal multiple times in a program,
@@ -71,7 +70,7 @@ void server::do_accept()
         if (!ec)
         {
           connection_manager_.start(std::make_shared<connection>(
-              std::move(socket_), connection_manager_, request_handler_, flag_));
+              std::move(socket_), connection_manager_, request_handler_));
         }
 
         do_accept();
