@@ -50,11 +50,6 @@ static size_t get_memory_limit();
 
 // static variables
 static volatile size_t gpu_mem_limit = get_memory_limit();
-static int32_t kernel_launch_time = 0; 		// monitor the progress of the
-											// infernece
-
-static cudaEvent_t cu_dummy;
-
 
 static volatile int running = 1;
 
@@ -158,4 +153,4 @@ static size_t get_size_of(CUarray_format fmt)
     }
     return byte_sz;
 }
-#endif
+#endif  // _HOOKS_H
