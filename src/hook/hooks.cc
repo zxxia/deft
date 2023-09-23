@@ -1,4 +1,6 @@
+#include <condition_variable>
 #include <iomanip>
+#include <mutex>
 #include "hooks.h"
 #include "nvml.h"
 
@@ -88,6 +90,15 @@ CUresult cuLaunchKernel_hook(
 		void** kernelParams, void** extra)
 {
     CUresult cures = CUDA_SUCCESS;
+    std::unique_lock<std::mutex> lk(mtx);
+    while (!running) {
+      cuStreamSynchronize(hStream);
+      ready_to_reply = 1;
+      cv.notify_one();
+      cv.wait(lk);
+      ready_to_reply = 1;
+      cv.notify_one();
+    }
     return cures;
 }
 

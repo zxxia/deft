@@ -51,14 +51,19 @@ static size_t get_memory_limit();
 // static variables
 static volatile size_t gpu_mem_limit = get_memory_limit();
 
-static volatile int running = 1;
+// Variables used for preemption begin
+volatile int running = 1;
+volatile int ready_to_reply = 0;
+std::condition_variable cv;
+std::mutex mtx;
+// Variables used for preemption end
 
 void launch_http_server()  {
   const std::string address = "0.0.0.0";
   const std::string port = "8080";
   std::cout << "server thread" << std::endl;
   // Initialise the server.
-  http::server::server s(address, port, ".", running);
+  http::server::server s(address, port, ".");
 
   // Run the server until stopped.
   s.run();
