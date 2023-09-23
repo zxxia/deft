@@ -34,7 +34,6 @@ limitations under the License.
 #include <nvtx3/nvToolsExt.h>
 
 using namespace std;
-#define _SYNC_BEFORE_PREEMPT
 #ifdef _SCHEDULER_LOCK
 
 static string suffix(getenv("SUFFIX")); // TODO: bug when genenv returns NULL
@@ -50,13 +49,6 @@ static boost::interprocess::named_mutex named_mtx(
 static boost::interprocess::named_condition named_cnd(
     boost::interprocess::open_only, named_cnd_name.c_str());
 
-#ifdef _SYNC_BEFORE_PREEMPT
-static boost::interprocess::named_mutex named_mtx_dev_sync(
-    boost::interprocess::open_only, named_mtx_dev_sync_name.c_str());
-static boost::interprocess::named_condition named_cnd_dev_sync(
-    boost::interprocess::open_only, named_cnd_dev_sync_name.c_str());
-static volatile int *gpu_empty;
-#endif // _SYNC_BEFORE_PREEMPT
 
 static volatile int *current_process;
 
@@ -72,9 +64,6 @@ void init_shared_mem() {
     int *mem = static_cast<int*>(region_ptr->get_address());
 
     current_process = &mem[0];
-#ifdef _SYNC_BEFORE_PREEMPT
-    gpu_empty = &mem[1];
-#endif // _SYNC_BEFORE_PREEMPT
 }
 
 #endif
@@ -203,14 +192,6 @@ CUresult cuLaunchKernel_hook(
         bool pushed = false;
         boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(named_mtx);
         while(*current_process == 1) {
-#ifdef _SYNC_BEFORE_PREEMPT
-            cuStreamSynchronize(hStream);
-            {
-                boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock_dev_sync(named_mtx_dev_sync);
-                *gpu_empty = 1;
-                named_cnd_dev_sync.notify_one();
-            }
-#endif // _SYNC_BEFORE_PREEMPT
             if (!pushed) {
                 nvtxRangePushA("preemption");
                 pushed = true;
@@ -220,10 +201,6 @@ CUresult cuLaunchKernel_hook(
         if (pushed) {
             nvtxRangePop();
         }
-#ifdef _SYNC_BEFORE_PREEMPT
-        boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock_dev_sync(named_mtx_dev_sync);
-        *gpu_empty = 0;
-#endif // _SYNC_BEFORE_PREEMPT
     }
 #endif
 
