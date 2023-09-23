@@ -34,7 +34,7 @@ public:
 
   /// Construct a connection with the given socket.
   explicit connection(boost::asio::ip::tcp::socket socket,
-      connection_manager& manager, request_handler& handler, volatile int& flag);
+      connection_manager& manager, request_handler& handler);
 
   /// Start the first asynchronous operation for the connection.
   void start();
@@ -69,9 +69,6 @@ private:
 
   /// The reply to be sent back to the client.
   reply reply_;
-
-  // The flag that can be toggled by post request
-  volatile int& flag_;
 };
 
 typedef std::shared_ptr<connection> connection_ptr;

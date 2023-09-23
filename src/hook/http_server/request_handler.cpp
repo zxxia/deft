@@ -18,6 +18,14 @@
 #include "reply.hpp"
 #include "request.hpp"
 
+#include <mutex>
+#include <condition_variable>
+
+extern std::mutex mtx;
+extern std::condition_variable cv;
+extern volatile int running;
+extern volatile int ready_to_reply;
+
 namespace http {
 namespace server {
 
@@ -38,7 +46,7 @@ request_handler::request_handler(const std::string& doc_root)
 {
 }
 
-void request_handler::handle_request(const request& req, reply& rep, volatile int& flag)
+void request_handler::handle_request(const request& req, reply& rep)
 {
   // Decode url to path.
   std::string request_path;
@@ -56,13 +64,22 @@ void request_handler::handle_request(const request& req, reply& rep, volatile in
         for (std::string kv_str : kv_strs) {
           std::vector<std::string> kv = strip_delimiter(kv_str, "=");
           if (kv.size() == 2 && kv[0] == "run") {
-            flag = std::stoi(kv[1]);
+            int new_val = std::stoi(kv[1]);
+            std::unique_lock<std::mutex> lk(mtx);
+            if (running != new_val) {
+              running = new_val;
+              cv.notify_one();
+              cv.wait(lk, []{return ready_to_reply;});
+              ready_to_reply = 0;
+              rep.content = "Running flag is updated to " + std::to_string(running) + "\n";
+            } else {
+              rep.content = "Running flag stays as " + std::to_string(running) + "\n";
+            }
           }
         }
       }
     }
     extension = "text";
-    rep.content = "Flag updated.\n";
   } else if (req.method == "GET" || req.method == "get") {
     // Request path must be absolute and not contain "..".
     if (request_path.empty() || request_path[0] != '/'
