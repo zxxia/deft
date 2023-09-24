@@ -3,5 +3,6 @@ __pycache__
 .ccls-cache
 .cache
 *.o
+*.d
 *.so
 torch_cache/
