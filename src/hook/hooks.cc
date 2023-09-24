@@ -93,6 +93,7 @@ CUresult cuLaunchKernel_hook(
     std::unique_lock<std::mutex> lk(mtx);
     while (!running) {
       cuStreamSynchronize(hStream);
+      kernel_cnt_btwn_sync = 0;
       ready_to_reply = 1;
       cv.notify_one();
       cv.wait(lk);
@@ -112,7 +113,11 @@ CUresult cuLaunchKernel_posthook(
 		void** kernelParams, void** extra)
 {
 	CUresult ret = CUDA_SUCCESS;
-
+  kernel_cnt_btwn_sync++;
+  if (sync_freq >= 0 && kernel_cnt_btwn_sync >= sync_freq) {
+    cuStreamSynchronize(hStream);
+    kernel_cnt_btwn_sync = 0;
+  }
 	return ret;
 }
 
