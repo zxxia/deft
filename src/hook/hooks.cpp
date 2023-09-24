@@ -1,7 +1,7 @@
 #include <condition_variable>
 #include <iomanip>
 #include <mutex>
-#include "hooks.h"
+#include "hooks.hpp"
 #include "nvml.h"
 
 /*************************** hooks functions below ***************************/
