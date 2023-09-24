@@ -25,6 +25,7 @@ extern std::mutex mtx;
 extern std::condition_variable cv;
 extern volatile int running;
 extern volatile int ready_to_reply;
+extern volatile int sync_freq;
 
 namespace http {
 namespace server {
@@ -76,6 +77,10 @@ void request_handler::handle_request(const request& req, reply& rep)
             } else {
               rep.content += "running stays as " + std::to_string(running) + "\n";
             }
+          } else if (kv.size() == 2 && kv[0] == "sync_freq") {
+            int new_val = std::stoi(kv[1]);
+            sync_freq = new_val;
+            rep.content += "sync_freq is updated to " + std::to_string(sync_freq) + "\n";
           }
         }
       }
