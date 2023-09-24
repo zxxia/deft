@@ -45,8 +45,8 @@
 #define NVML_CHECK_DONT_ABORT(ret)  										\
 	nvml_assert((ret), true, __FILE__, __LINE__);
 
-// prototypes used for static variable definition
 static size_t get_memory_limit();
+int get_sync_freq_from_env();
 
 // static variables
 static volatile size_t gpu_mem_limit = get_memory_limit();
@@ -57,6 +57,23 @@ volatile int ready_to_reply = 0;
 std::condition_variable cv;
 std::mutex mtx;
 // Variables used for preemption end
+
+// Varibles used for synchornization frequency begin
+// cuda stream synchronize every sync_freq kernels.
+// 0 or negative means no synchronization point is added.
+// bad string like "foobar" is converted to 0 so no sync point will be inserted
+volatile int sync_freq = get_sync_freq_from_env();
+// kernel count between two synchronization points
+static int kernel_cnt_btwn_sync = 0;
+// Varibles used for synchornization frequency end
+
+int get_sync_freq_from_env() {
+  const char* sync_freq_str = std::getenv("SYNC_FREQ");
+  if (sync_freq_str == NULL) {
+    return 0;
+  }
+  return std::atoi(sync_freq_str);
+}
 
 void launch_http_server()  {
   const std::string address = "0.0.0.0";
