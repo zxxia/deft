@@ -33,7 +33,7 @@
 #define MAXPROC 	102400
 
 // options
-#define CGROUP_DIR getenv("CGROUP_DIR")
+// #define CGROUP_DIR getenv("CGROUP_DIR")
 
 
 // function macro for checking and debugging
@@ -45,11 +45,11 @@
 #define NVML_CHECK_DONT_ABORT(ret)  										\
 	nvml_assert((ret), true, __FILE__, __LINE__);
 
-static size_t get_memory_limit();
+// static size_t get_memory_limit();
 int get_sync_freq_from_env();
 
 // static variables
-static volatile size_t gpu_mem_limit = get_memory_limit();
+// static volatile size_t gpu_mem_limit = get_memory_limit();
 
 // Variables used for preemption begin
 volatile int running = 1;
@@ -88,7 +88,7 @@ void launch_http_server()  {
 
 // directly return the gpu memory capacity as, for now, we do not limit the
 // memory usage.
-static size_t get_memory_limit() { return 24220 * MB; }
+// static size_t get_memory_limit() { return 24220 * MB; }
 
 inline void cuda_assert(
 	CUresult code, bool suppress, const char *file, int line)
@@ -117,62 +117,63 @@ inline void nvml_assert(
 	}
 }
 
-static void read_pids(std::set<pid_t> &pids)
-{
-	char* cgroup_procs = (char *)malloc(sizeof(char) * 100);
-	snprintf(cgroup_procs, 100, "%s/cgroup.procs", CGROUP_DIR);
-    std::ifstream fs(cgroup_procs);
-    for(std::string line; std::getline(fs, line); )
-        pids.insert(atoi(line.c_str()));
-    fs.close();
-	free(cgroup_procs);
-}
-
-static int get_gpu_compute_processes(
-		uint32_t *proc_count, nvmlProcessInfo_t *proc_infos)
-{
-    nvmlReturn_t ret;
-    nvmlDevice_t device;
-    NVML_CHECK(
-		nvmlDeviceGetHandleByIndex(0, &device));
-    NVML_CHECK(
-		nvmlDeviceGetComputeRunningProcesses(device, proc_count, proc_infos));
-    return 0;
-}
-
-
-static CUresult validate_memory(size_t to_allocate)
-{
-    CUresult cu_res = CUDA_SUCCESS;
-    size_t totalUsed = 0;
-
-    // TODO handle race condition
-    if (totalUsed + to_allocate > gpu_mem_limit)
-		return CUDA_ERROR_OUT_OF_MEMORY;
-
-	return cu_res;
-}
-
-static size_t get_size_of(CUarray_format fmt)
-{
-    size_t byte_sz = 1;
-    switch (fmt) {
-    case CU_AD_FORMAT_UNSIGNED_INT8:
-    case CU_AD_FORMAT_SIGNED_INT8:
-    case CU_AD_FORMAT_NV12:
-        byte_sz = 1;
-        break;
-    case CU_AD_FORMAT_UNSIGNED_INT16:
-    case CU_AD_FORMAT_SIGNED_INT16:
-    case CU_AD_FORMAT_HALF:
-        byte_sz = 2;
-        break;
-    case CU_AD_FORMAT_UNSIGNED_INT32:
-    case CU_AD_FORMAT_SIGNED_INT32:
-    case CU_AD_FORMAT_FLOAT:
-        byte_sz = 4;
-        break;
-    }
-    return byte_sz;
-}
+// static void read_pids(std::set<pid_t> &pids)
+// {
+// 	char* cgroup_procs = (char *)malloc(sizeof(char) * 100);
+// 	snprintf(cgroup_procs, 100, "%s/cgroup.procs", CGROUP_DIR);
+//     std::ifstream fs(cgroup_procs);
+//     for(std::string line; std::getline(fs, line); )
+//         pids.insert(atoi(line.c_str()));
+//     fs.close();
+// 	free(cgroup_procs);
+// }
+//
+// static int get_gpu_compute_processes(
+// 		uint32_t *proc_count, nvmlProcessInfo_t *proc_infos)
+// {
+//     nvmlDevice_t device;
+//     NVML_CHECK(
+// 		nvmlDeviceGetHandleByIndex(0, &device));
+//     NVML_CHECK(
+// 		nvmlDeviceGetComputeRunningProcesses(device, proc_count, proc_infos));
+//     return 0;
+// }
+//
+//
+// static CUresult validate_memory(size_t to_allocate)
+// {
+//     CUresult cu_res = CUDA_SUCCESS;
+//     size_t totalUsed = 0;
+//
+//     // TODO handle race condition
+//     if (totalUsed + to_allocate > gpu_mem_limit)
+// 		return CUDA_ERROR_OUT_OF_MEMORY;
+//
+// 	return cu_res;
+// }
+//
+// static size_t get_size_of(CUarray_format fmt)
+// {
+//     size_t byte_sz = 1;
+//     switch (fmt) {
+//     case CU_AD_FORMAT_UNSIGNED_INT8:
+//     case CU_AD_FORMAT_SIGNED_INT8:
+//     case CU_AD_FORMAT_NV12:
+//         byte_sz = 1;
+//         break;
+//     case CU_AD_FORMAT_UNSIGNED_INT16:
+//     case CU_AD_FORMAT_SIGNED_INT16:
+//     case CU_AD_FORMAT_HALF:
+//         byte_sz = 2;
+//         break;
+//     case CU_AD_FORMAT_UNSIGNED_INT32:
+//     case CU_AD_FORMAT_SIGNED_INT32:
+//     case CU_AD_FORMAT_FLOAT:
+//         byte_sz = 4;
+//         break;
+//     default:
+//         break;
+//     }
+//     return byte_sz;
+// }
 #endif  // _HOOKS_H

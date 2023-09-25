@@ -90,7 +90,7 @@ private:
     expecting_body
   } state_;
 
-  int content_length_;
+  unsigned int content_length_;
 };
 
 } // namespace server
