@@ -42,12 +42,12 @@ class WorkerProc(mp.Process):
         # # set the directory for downloading models
         while True:
             request = self.req_queue.get()
-            print(request)
+            # print(request)
             request = json.loads(request.decode('utf-8'))
-            print('worker', request, file=sys.stderr, flush=True)
+            # print('worker', request, file=sys.stderr, flush=True)
 
             res = self.process_request(request)
-            print(res)
+            print('done')
 
     def process_request(self, request):
         start_t: int = perf_counter_ns()
@@ -61,7 +61,6 @@ class WorkerProc(mp.Process):
         #         debug_print(e)
         assert self.model is not None
         res = self.model.infer(request)
-        print(res)
         end_t: int = perf_counter_ns()
         self.res_queue.put((start_t, end_t))
         # if self.lib is not None:
