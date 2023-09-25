@@ -87,17 +87,17 @@ typedef enum HookSymbolsEnum {
 } HookSymbols;
 
 extern void launch_http_server();
-extern CUresult cuInit_hook(unsigned int Flags);
-extern CUresult cuInit_posthook(unsigned int Flags);
-extern CUresult cuMemAlloc_hook(CUdeviceptr* dptr, size_t bytesize);
-extern CUresult cuMemAllocManaged_hook(CUdeviceptr *dptr, size_t bytesize, unsigned int flags);
-extern CUresult cuMemAllocPitch_hook(CUdeviceptr* dptr, size_t* pPitch, size_t WidthInBytes,
-                                     size_t Height, unsigned int ElementSizeBytes);
-extern CUresult cuArrayCreate_hook(CUarray *pHandle, const CUDA_ARRAY_DESCRIPTOR *pAllocateArray);
-extern CUresult cuArray3DCreate_hook(CUarray* pHandle, const CUDA_ARRAY3D_DESCRIPTOR* pAllocateArray);
-extern CUresult cuMipmappedArrayCreate_hook(CUmipmappedArray *pHandle,
-                                       const CUDA_ARRAY3D_DESCRIPTOR *pMipmappedArrayDesc,
-                                       unsigned int numMipmapLevels);
+// extern CUresult cuInit_hook(unsigned int Flags);
+// extern CUresult cuInit_posthook(unsigned int Flags);
+// extern CUresult cuMemAlloc_hook(CUdeviceptr* dptr, size_t bytesize);
+// extern CUresult cuMemAllocManaged_hook(CUdeviceptr *dptr, size_t bytesize, unsigned int flags);
+// extern CUresult cuMemAllocPitch_hook(CUdeviceptr* dptr, size_t* pPitch, size_t WidthInBytes,
+//                                      size_t Height, unsigned int ElementSizeBytes);
+// extern CUresult cuArrayCreate_hook(CUarray *pHandle, const CUDA_ARRAY_DESCRIPTOR *pAllocateArray);
+// extern CUresult cuArray3DCreate_hook(CUarray* pHandle, const CUDA_ARRAY3D_DESCRIPTOR* pAllocateArray);
+// extern CUresult cuMipmappedArrayCreate_hook(CUmipmappedArray *pHandle,
+//                                        const CUDA_ARRAY3D_DESCRIPTOR *pMipmappedArrayDesc,
+//                                        unsigned int numMipmapLevels);
 extern CUresult cuLaunchKernel_hook(CUfunction f, unsigned int gridDimX, unsigned int gridDimY,
                                     unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY,
                                     unsigned int blockDimZ, unsigned int sharedMemBytes, CUstream hStream,
@@ -114,19 +114,19 @@ extern CUresult cuLaunchCooperativeKernel_posthook(CUfunction f, unsigned int gr
                                                unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY,
                                                unsigned int blockDimZ, unsigned int sharedMemBytes,
                                                CUstream hStream, void **kernelParams);
-extern CUresult cuDeviceTotalMem_posthook(size_t* bytes, CUdevice dev);
-extern CUresult cuMemGetInfo_posthook(size_t* free, size_t* total);
+// extern CUresult cuDeviceTotalMem_posthook(size_t* bytes, CUdevice dev);
+// extern CUresult cuMemGetInfo_posthook(size_t* free, size_t* total);
 
 
-//wenqing: cuLaunchKernel is indexed as 7 by the enumeration afore-defined.
+// cuLaunchKernel is indexed as 7 by the enumeration afore-defined.
 static void* hooks[SYM_CU_SYMBOLS] = {
-    (void*) cuInit_hook,
-    (void*) cuMemAlloc_hook,
-    (void*) cuMemAllocManaged_hook,
-    (void*) cuMemAllocPitch_hook,
-    (void*) cuArrayCreate_hook,
-    (void*) cuArray3DCreate_hook,
-    (void*) cuMipmappedArrayCreate_hook,
+    NULL, // (void*) cuInit_hook,
+    NULL, // (void*) cuMemAlloc_hook,
+    NULL, // (void*) cuMemAllocManaged_hook,
+    NULL, // (void*) cuMemAllocPitch_hook,
+    NULL, // (void*) cuArrayCreate_hook,
+    NULL, // (void*) cuArray3DCreate_hook,
+    NULL, // (void*) cuMipmappedArrayCreate_hook,
     (void*) cuLaunchKernel_hook,
     (void*) cuLaunchCooperativeKernel_hook,
     NULL,
@@ -135,18 +135,18 @@ static void* hooks[SYM_CU_SYMBOLS] = {
 };
 //wenqing: cuLaunchKernel is indexed as 7 by the enumeration afore-defined.
 static void* post_hooks[SYM_CU_SYMBOLS] = {
-    (void*) cuInit_posthook,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+  NULL, // (void*) cuInit_posthook,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
 	(void*) cuLaunchKernel_posthook,
 	(void*) cuLaunchKernel_hook,
-    (void*) cuDeviceTotalMem_posthook,
-    (void*) cuMemGetInfo_posthook,
-    NULL
+  NULL, // (void*) cuDeviceTotalMem_posthook,
+  NULL, // (void*) cuMemGetInfo_posthook,
+  NULL
 };
 
 static void* real_func[SYM_CU_SYMBOLS];
