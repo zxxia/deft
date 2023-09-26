@@ -4,6 +4,7 @@ import multiprocessing as mp
 import os
 import threading
 from functools import partial
+from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from worker_proc import WorkerProc
@@ -37,6 +38,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         self.queue.put(post_data)
 
+        # TODO: send reponse until inference is done
+        self.send_response(HTTPStatus.OK)
+        self.send_header('Content-Type', 'text')
+        self.end_headers()
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="A DNN inference container.")
@@ -54,7 +60,7 @@ def parse_args():
                         help="Name of the output.")
     parser.add_argument('--ip', metavar='IP', type=str, default='localhost',
                         help="IP address of the container.")
-    parser.add_argument('--port', metavar='IP', type=int, default=12345,
+    parser.add_argument('--port', metavar='PORT', type=int, default=12345,
                         help="Port the container listens to.")
     return parser.parse_args()
 
