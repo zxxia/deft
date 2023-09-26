@@ -39,7 +39,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.queue.put(post_data)
 
         # TODO: send reponse until inference is done
-        self.send_response(HTTPStatus.OK)
+        self.send_response(HTTPStatus.ACCEPTED)
         self.send_header('Content-Type', 'text')
         self.end_headers()
 
