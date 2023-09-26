@@ -62,7 +62,7 @@ class WorkerProc(mp.Process):
         assert self.model is not None
         res = self.model.infer(request)
         end_t: int = perf_counter_ns()
-        self.res_queue.put((start_t, end_t))
+        self.res_queue.put((start_t, end_t, request, res))
         # if self.lib is not None:
         #     try:
         #         suffix = os.getenv("SUFFIX", None)

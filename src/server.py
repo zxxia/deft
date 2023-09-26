@@ -23,7 +23,7 @@ class LoggingThd(threading.Thread):
 
     def run(self):
         while True:
-            (start_t, end_t) = self.queue.get()
+            (start_t, end_t, req, _) = self.queue.get()
             self.csv_writer.writerow([
                 start_t, end_t, (end_t - start_t) / 1000000])
             # , max_alloc_mem_byte, max_rsrv_mem_byte])
@@ -39,7 +39,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.queue.put(post_data)
 
         # TODO: send reponse until inference is done
-        self.send_response(HTTPStatus.OK)
+        self.send_response(HTTPStatus.ACCEPTED)
         self.send_header('Content-Type', 'text')
         self.end_headers()
 
