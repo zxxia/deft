@@ -18,6 +18,17 @@
   LD_PRELOAD=src/hook/build/lib/libcuinterpose.so python src/dummy_server.py
   ```
 
+* Build docker container (Remove `sudo` if no permission)
+  ```bash
+  sudo docker build . -t deft
+  ```
+
+* Run docker container (Remove `sudo` if no permission)
+  ```bash
+  sudo docker run -it --rm --runtime=nvidia --gpus all --name test_deft \
+    -v ./dataset/rene/0000000099.png:/dataset/rene/0000000099.png \
+    -e LD_PRELOAD=src/hook/build/lib/libcuinterpose.so deft
+  ```
 
 * Some debugging commands (ignore)
 
