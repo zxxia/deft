@@ -17,7 +17,9 @@ def parse_args():
                         help="DNN model name to run")
     parser.add_argument('--ip', metavar='IP', type=str, default='localhost',
                         help="IP address of the container.")
-    parser.add_argument('--ports', metavar='IP', nargs="+", type=int,
+    parser.add_argument('--ports', metavar='PORT', nargs="+", type=int,
+                        default=[12345], help="Ports containers listen to.")
+    parser.add_argument('--hook-ports', metavar='HOOK_PORT', nargs="+", type=int,
                         default=[12345], help="Ports containers listen to.")
     parser.add_argument('--priors', metavar='Priorities', nargs="+", type=int,
                         default=[0], help="Priorities of containers.")
@@ -32,12 +34,16 @@ def distrbute_requests():
         req_data['started'] = False
 
         if scheduler is not None:
-            scheduler.recv_req(req_data)
+            if not scheduler.recv_req(req_data):
+                return Response(
+                    f"Model name {req_data['model_name']} not supported\n",
+                    status=HTTPStatus.BAD_REQUEST,
+                    content_type="text")
             scheduler.schedule()
-            return Response("Request accepted", status=HTTPStatus.ACCEPTED,
+            return Response("Request accepted\n", status=HTTPStatus.ACCEPTED,
                             content_type="text")
         else:
-            return Response("Scheduler is not properly set.",
+            return Response("Scheduler is not properly set\n",
                             status=HTTPStatus.INTERNAL_SERVER_ERROR,
                             content_type="text")
     else:
@@ -51,11 +57,11 @@ def job_finish():
         if scheduler is not None:
             scheduler.finish_running_req()
             scheduler.schedule()
-            return Response("Job finish notification received",
+            return Response("Job finish notification received\n",
                             status=HTTPStatus.OK,
                             content_type="text")
         else:
-            return Response("Scheduler is not properly set.",
+            return Response("Scheduler is not properly set\n",
                             status=HTTPStatus.INTERNAL_SERVER_ERROR,
                             content_type="text")
     else:
@@ -65,7 +71,9 @@ def job_finish():
 if __name__ == '__main__':
     args = parse_args()
     container_ip_port = {}
-    for model_name, port in zip(args.model_names, args.ports):
-        container_ip_port[model_name] = (args.ip, port, args.ip, args.ip + 1)
+    assert len(args.model_names) == len(args.ports)
+    assert len(args.model_names) == len(args.hook_ports)
+    for model_name, port, hook_port in zip(args.model_names, args.ports, args.hook_ports):
+        container_ip_port[model_name] = (args.ip, port, args.ip, hook_port)
     scheduler = Scheduler(container_ip_port)
     app.run(host='0.0.0.0', port=5000)

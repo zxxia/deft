@@ -2,6 +2,7 @@ import argparse
 import csv
 import multiprocessing as mp
 import os
+import requests
 import threading
 from functools import partial
 from http import HTTPStatus
@@ -11,9 +12,11 @@ from worker_proc import WorkerProc
 
 
 class LoggingThd(threading.Thread):
-    def __init__(self, log_fname, queue):
+    def __init__(self, log_fname, queue, ctlr_ip=None, ctlr_port=None):
         super(LoggingThd, self).__init__()
         self.queue = queue
+        self.ctlr_ip = ctlr_ip
+        self.ctlr_port = ctlr_port
         self.csv_fh = open(log_fname, 'w', 1)
         self.csv_writer = csv.writer(self.csv_fh, lineterminator='\n')
         self.csv_writer.writerow(
@@ -27,6 +30,10 @@ class LoggingThd(threading.Thread):
             self.csv_writer.writerow([
                 start_t, end_t, (end_t - start_t) / 1000000])
             # , max_alloc_mem_byte, max_rsrv_mem_byte])
+            if self.ctlr_ip and self.ctlr_port:
+                _ = requests.post(
+                    'http://{}:{}/job_finish'.format(
+                        self.ctlr_ip, self.ctlr_port))
 
 class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, queue: mp.Queue, *args, **kwargs):
@@ -34,7 +41,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
 
     def do_POST(self):
-        content_length = int(self.headers.get('Content-Length'))
+        content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
         self.queue.put(post_data)
 
@@ -62,6 +69,10 @@ def parse_args():
                         help="IP address of the container.")
     parser.add_argument('--port', metavar='PORT', type=int, default=12345,
                         help="Port the container listens to.")
+    parser.add_argument('--ctlr-ip', metavar='CONTROLLER_IP', type=str,
+                        default=None, help="IP address of the controller.")
+    parser.add_argument('--ctlr-port', metavar='CONTROLLER_PORT', type=int,
+                        default=None, help="Port the controller listens to.")
     return parser.parse_args()
 
 
@@ -84,7 +95,7 @@ def main():
     # set up log
     os.makedirs(output_path, exist_ok=True)
     csv_fname = os.path.join(output_path, output_file_name + ".csv")
-    logging_thd = LoggingThd(csv_fname, res_queue)
+    logging_thd = LoggingThd(csv_fname, res_queue, args.ctlr_ip, args.ctlr_port)
     logging_thd.daemon = True
     logging_thd.start()
 

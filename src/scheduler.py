@@ -1,3 +1,4 @@
+import json
 import requests
 import threading
 
@@ -27,15 +28,20 @@ def priority_based(req_queue, running_req):
 
 
 class Scheduler:
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, container_ip_port):
+        self.container_ip_port = container_ip_port
         self.req_queue = []
         self.running_req = None
         self.lock = threading.Lock()
 
-    def recv_req(self, req):
+    def recv_req(self, req)->bool:
+        try:
+            self._get_ip_port(req)
+        except KeyError:
+            return False
         with self.lock:
             self.req_queue.append(req)
+        return True
 
     def finish_running_req(self):
         with self.lock:
@@ -52,11 +58,14 @@ class Scheduler:
                 ip, port, hook_ip, hook_port = self._get_ip_port(req_to_sched)
                 if not req_to_sched['started']:
                     _ = requests.post('http://{}:{}'.format(ip, port),
-                                      req_to_sched.encode())
+                                      json.dumps(req_to_sched).encode())
+
                     req_to_sched['started'] = True
                 # send run signal to container
-                _ = requests.post('http://{}:{}'.format(hook_ip, hook_port),
-                                  "run=1".encode())
+                _ = requests.post(
+                    'http://{}:{}'.format(hook_ip, hook_port),
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    data="run=1".encode())
                 self.running_req = req_to_sched
                 self.req_queue.remove(req_to_sched)
 
@@ -65,14 +74,15 @@ class Scheduler:
         if self.running_req is None:
             return
         _, _, hook_ip, hook_port = self._get_ip_port(self.running_req)
-        _ = requests.post('http://{}:{}'.format(hook_ip, hook_port),
-                          "run=0".encode())
+        _ = requests.post(
+            'http://{}:{}'.format(hook_ip, hook_port),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data="run=0".encode())
         # insert the running_req back to queue
         self.req_queue.append(self.running_req)
         self.running_req = None
 
     def _get_ip_port(self, req):
         model_name = req.get('model_name', 'fasterrcnn_resnet50_fpn')
-        ip, port, hook_ip, hook_port = self.config['container_ip_port'].get(
-            model_name, ('localhost', 12345))
+        ip, port, hook_ip, hook_port = self.container_ip_port[model_name]
         return ip, port, hook_ip, hook_port
