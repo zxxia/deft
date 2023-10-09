@@ -76,9 +76,15 @@ int get_sync_freq_from_env() {
 }
 
 void launch_http_server()  {
-  const std::string address = "0.0.0.0";
-  const std::string port = "8080";
-  std::cout << "server thread" << std::endl;
+  const char* address = std::getenv("HOOK_IP");
+  if (address == NULL) {
+    address = "localhost";
+  }
+  const char* port = std::getenv("HOOK_PORT");
+  if (port == NULL) {
+    port = "8080";
+  }
+  std::cout << "hook http server is listening at " << address << " " << port << std::endl;
   // Initialise the server.
   http::server::server s(address, port, ".");
 
