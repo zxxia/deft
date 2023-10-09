@@ -21,8 +21,9 @@ def parse_args():
                         default=[12345], help="Ports containers listen to.")
     parser.add_argument('--hook-ports', metavar='HOOK_PORT', nargs="+", type=int,
                         default=[12345], help="Ports containers listen to.")
-    parser.add_argument('--priors', metavar='Priorities', nargs="+", type=int,
-                        default=[0], help="Priorities of containers.")
+    parser.add_argument('--sched', metavar='SCHEDULE', type=str,
+                        default='priority_based',
+                        choices=('fcfs', 'priority_based'), help="Scheduler.")
     return parser.parse_args()
 
 
@@ -75,5 +76,5 @@ if __name__ == '__main__':
     assert len(args.model_names) == len(args.hook_ports)
     for model_name, port, hook_port in zip(args.model_names, args.ports, args.hook_ports):
         container_ip_port[model_name] = (args.ip, port, args.ip, hook_port)
-    scheduler = Scheduler(container_ip_port)
+    scheduler = Scheduler(container_ip_port, args.sched)
     app.run(host='0.0.0.0', port=5000)
