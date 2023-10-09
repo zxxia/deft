@@ -33,6 +33,16 @@
 * Some debugging commands (ignore)
 
 ```
+python src/controller.py --hook-ports 8080 8081 \
+--model-names fasterrcnn_resnet50_fpn resnet50 --ports 12345 12346
+
+LD_PRELOAD=./src/hook/build/lib/libcuinterpose.so python src/server.py \
+--port 12345 --ctlr-ip localhost --ctlr-port 5000 --name model_A
+
+HOOK_PORT=8081 LD_PRELOAD=./src/hook/build/lib/libcuinterpose.so \
+python src/server.py --port 12346 --ctlr-ip localhost --ctlr-port 5000 \
+--model-name resnet50 --model-weight ResNet50_Weights --name model_B
+
 sudo netstat -tulpn | grep 8080
 curl -i -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "run=0&sync_freq=50" http://0.0.0.0:8080
 ```
