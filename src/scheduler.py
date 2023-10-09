@@ -16,23 +16,34 @@ def fcfs(req_queue, running_req):
 
 def priority_based(req_queue, running_req):
     if req_queue:
-        # TODO: sort req_queue based on priority
+        # sort req_queue based on priority
+        req_queue = sorted(req_queue,
+                           key=lambda req: req.get('priority', 0),
+                           reverse=True)
         # do nothing about the reply
         if running_req is None:
             return False, req_queue[0]
         else:
-            # TODO: check priority of running and target req
+            # check priority of running and target req
+            if req_queue[0].get('priority', 0) > running_req.get('priority', 0):
+                return True, req_queue[0]
             return False, None
     else:
         return False, None
 
 
 class Scheduler:
-    def __init__(self, container_ip_port):
+    def __init__(self, container_ip_port, sched):
         self.container_ip_port = container_ip_port
         self.req_queue = []
         self.running_req = None
         self.lock = threading.Lock()
+        if sched == "fcfs":
+            self.sched = fcfs
+        elif sched == 'priority_based':
+            self.sched = priority_based
+        else:
+            raise NotImplementedError
 
     def recv_req(self, req)->bool:
         try:
@@ -49,7 +60,8 @@ class Scheduler:
 
     def schedule(self):
         with self.lock:
-            do_preempt, req_to_sched = fcfs(self.req_queue, self.running_req)
+            do_preempt, req_to_sched = self.sched(
+                self.req_queue, self.running_req)
             if do_preempt:
                 # stop running req
                 self._preempt()
