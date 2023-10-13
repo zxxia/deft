@@ -7,6 +7,7 @@ import threading
 from functools import partial
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from time import perf_counter_ns
 
 from worker_proc import WorkerProc
 
@@ -20,15 +21,15 @@ class LoggingThd(threading.Thread):
         self.csv_fh = open(log_fname, 'w', 1)
         self.csv_writer = csv.writer(self.csv_fh, lineterminator='\n')
         self.csv_writer.writerow(
-            ['start_timestamp_ns', 'end_timestamp_ns', 'jct_ms',
-             'max_allocated_gpu_memory_allocated_byte',
-             'max_reserved_gpu_memory_byte'])
+            ['inf_start_timestamp_ns', 'inf_end_timestamp_ns', 'jct_ms',
+             'req_recv_timestamp_ns', 'log_timestamp_ns'])
 
     def run(self):
         while True:
-            (start_t, end_t) = self.queue.get()
+            (start_t, end_t, req_recv_t) = self.queue.get()
+            log_t = perf_counter_ns()
             self.csv_writer.writerow([
-                start_t, end_t, (end_t - start_t) / 1000000])
+                start_t, end_t, (end_t - start_t) / 1000000, req_recv_t, log_t])
             # , max_alloc_mem_byte, max_rsrv_mem_byte])
             if self.ctlr_ip and self.ctlr_port:
                 _ = requests.post(
@@ -45,7 +46,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         self.queue.put(post_data)
 
-        # TODO: send reponse until inference is done
+        # alternative way: send the reponse until the inference is done
         self.send_response(HTTPStatus.ACCEPTED)
         self.send_header('Content-Type', 'text')
         self.end_headers()
