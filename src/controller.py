@@ -1,6 +1,7 @@
 import argparse
 import json
 from http import HTTPStatus
+from time import perf_counter_ns
 from typing import Optional
 from flask import Flask, request, Response
 
@@ -32,6 +33,7 @@ def distrbute_requests():
     if request.method == 'POST':
         global scheduler
         req_data = json.loads(request.get_data().decode('utf-8'))
+        req_data['req_recv_timestamp_ns'] = perf_counter_ns()
         req_data['started'] = False
 
         if scheduler is not None:
