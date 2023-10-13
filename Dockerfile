@@ -25,4 +25,4 @@ WORKDIR /src/hook
 RUN make
 
 WORKDIR /
-ENTRYPOINT ["python3", "src/dummy_server.py"]
+CMD ["python3", "src/dummy_server.py"]
