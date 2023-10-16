@@ -56,6 +56,14 @@
   LD_PRELOAD=src/hook/build/lib/libcuinterpose.so python src/dummy_server.py
   ```
 
+* Plot
+  ```bash
+  cd deft
+  python src/plot_jct_timeseries.py \
+    --model-A-jct-log output/model_A.csv \
+    --model-B-jct-log output/model_B.csv
+  ```
+
 * Some debugging commands (ignore)
 
 ```
