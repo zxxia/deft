@@ -39,6 +39,12 @@
   ```
 
 * Find inference logs in `output/`
+  ```bash
+  cd deft
+  python scripts/plot_jct_timeseries.py \
+    --model-A-jct-log output/model_A.csv \
+    --model-B-jct-log output/model_B.csv
+  ```
 
 ## Sanity check without containers
 * Compile hook library by running  
