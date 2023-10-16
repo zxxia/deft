@@ -116,7 +116,7 @@ CUresult cuLaunchKernel_posthook(
 {
 	CUresult ret = CUDA_SUCCESS;
   kernel_cnt_btwn_sync++;
-  if (sync_freq >= 0 && kernel_cnt_btwn_sync >= sync_freq) {
+  if (sync_freq > 0 && kernel_cnt_btwn_sync >= sync_freq) {
     cuStreamSynchronize(hStream);
     kernel_cnt_btwn_sync = 0;
   }

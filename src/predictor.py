@@ -2,6 +2,12 @@ class SyncFreqPredictor:
     def __init__(self) -> None:
         pass
     def predict(self) -> int:
+        return 0
+
+class ConstantSyncFreqPredictor:
+    def __init__(self) -> None:
+        pass
+    def predict(self) -> int:
         return 50
 
 # TODO: implement it
