@@ -6,10 +6,12 @@ from typing import Optional
 from flask import Flask, request, Response
 
 from scheduler import Scheduler
+from predictor import SyncFreqPredictor
 
 app = Flask(__name__)
 
 scheduler: Optional[Scheduler] = None
+predictor: Optional[SyncFreqPredictor] = None
 
 def parse_args():
     parser = argparse.ArgumentParser(description="A DNN inference container.")
@@ -78,5 +80,6 @@ if __name__ == '__main__':
     assert len(args.model_names) == len(args.hook_ports)
     for model_name, port, hook_port in zip(args.model_names, args.ports, args.hook_ports):
         container_ip_port[model_name] = (args.ip, port, args.ip, hook_port)
-    scheduler = Scheduler(container_ip_port, args.sched)
+    predictor = SyncFreqPredictor()
+    scheduler = Scheduler(container_ip_port, args.sched, predictor)
     app.run(host='0.0.0.0', port=5000)

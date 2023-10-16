@@ -33,7 +33,7 @@ def priority_based(req_queue, running_req):
 
 
 class Scheduler:
-    def __init__(self, container_ip_port, sched):
+    def __init__(self, container_ip_port, sched, sync_freq_predictor=None):
         self.container_ip_port = container_ip_port
         self.req_queue = []
         self.running_req = None
@@ -44,6 +44,7 @@ class Scheduler:
             self.sched = priority_based
         else:
             raise NotImplementedError
+        self.sync_freq_predictor = sync_freq_predictor
 
     def recv_req(self, req)->bool:
         try:
@@ -74,10 +75,14 @@ class Scheduler:
 
                     req_to_sched['started'] = True
                 # send run signal to container
+                data = "run=1"
+                if self.sync_freq_predictor:
+                    data += "&sync_freq={}".format(
+                        self.sync_freq_predictor.predict())
                 _ = requests.post(
                     'http://{}:{}'.format(hook_ip, hook_port),
                     headers={"Content-Type": "application/x-www-form-urlencoded"},
-                    data="run=1".encode())
+                    data=data.encode())
                 self.running_req = req_to_sched
                 self.req_queue.remove(req_to_sched)
 
